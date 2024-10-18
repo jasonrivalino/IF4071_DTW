@@ -26,6 +26,7 @@ def select_folder_and_file(current_dir):
         print("1. Jason")
         print("2. Louis")
         print("3. Satria")
+        print("4. Faris")
         print()
         folder_choice = input("Masukkan pilihan dengan angka: ")
         
@@ -38,6 +39,9 @@ def select_folder_and_file(current_dir):
             break
         elif folder_choice == "3":
             folder = "3 - Satria"
+            break
+        elif folder_choice == "4":
+            folder = "4 - Faris"
             break
         else:
             print("Pilihan tidak valid, coba lagi.")
