@@ -74,38 +74,40 @@ def select_folder_and_file_input(current_dir):
             
 # Function to select folder and file compare
 def select_folder_and_file_compare(current_dir):
-    # Access all folders in the sound directory
+    # Access all folders in the sound directory and display them
     sound_dir = os.path.join(current_dir, "..\\sound")
-    folders = [f for f in os.listdir(sound_dir) if os.path.isdir(os.path.join(sound_dir, f))]
+    folders = os.listdir(sound_dir)
     
-    selected_files = []
-
-    # Loop through each folder and ask the user to choose a sound file from each one
-    for folder in folders:
-        print(f"Folder: {folder}")
-        folder_path = os.path.join(sound_dir, folder)
-        
-        while True:
-            # Ask user to input the sound file name without the extension
-            file_input = input(f"Masukkan nama file audio di folder '{folder}' (tanpa format, e.g., input_sound): ")
-            
-            # Check for both .wav and .mp3 extensions
-            file_path_wav = os.path.join(folder_path, file_input + ".wav")
-            file_path_mp3 = os.path.join(folder_path, file_input + ".mp3")
-            
-            # Validate if file exists
-            if os.path.isfile(file_path_wav):
-                print(f"File ditemukan: {file_input}.wav di folder {folder}\n")
-                selected_files.append(file_path_wav)
-                break
-            elif os.path.isfile(file_path_mp3):
-                print(f"File ditemukan: {file_input}.mp3 di folder {folder}\n")
-                selected_files.append(file_path_mp3)
-                break
-            else:
-                print("File tidak ditemukan, coba lagi.")
-
-    return selected_files
+    print("Pilih folder audio file:")
+    for i, folder in enumerate(folders):
+        print(f"{i+1}. {folder}")
+    print()
+    
+    # Let the user choose a folder
+    folder_choice = input("Masukkan pilihan dengan angka: ")
+    
+    # Determine the folder based on user input
+    folder = folders[int(folder_choice) - 1]
+    print(f"Folder yang dipilih: {folder}")
+    
+    # Build the path to the chosen folder
+    chosen_folder_path = os.path.join(sound_dir, folder)
+    
+    # Get all .wav files in the chosen folder
+    wav_files = [file for file in os.listdir(chosen_folder_path) if file.endswith(".wav")]
+    
+    if not wav_files:
+        print(f"Tidak ada file .wav di folder {folder}.")
+        return None
+    
+    # Print all .wav files found in the chosen folder
+    print(f"\nFile .wav yang tersedia di folder {folder}:")
+    for i, file in enumerate(wav_files):
+        print(f"{i+1}. {file}")
+    print()
+    
+    # Return the list of .wav files with their full paths
+    return [os.path.join(chosen_folder_path, file) for file in wav_files]
 
 # Main function to compare all test cases
 if __name__ == "__main__":
