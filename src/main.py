@@ -107,39 +107,46 @@ def select_folder_and_file_compare(current_dir):
 
     return selected_files
 
-# Main function to compare two audio files
+# Main function to compare all test cases
 if __name__ == "__main__":
-    # Get the current script directory
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    print(f"Current directory: {current_dir}")
-    
-    # Select folder and file for file1
-    print("\n(1) Pilih folder dan file untuk audio input")
-    print()
-    file1 = select_folder_and_file_input(current_dir)
-    
-    print()
-    print("----------------------------------------------------------------------------------------------------")
-    print()
-    
-    # Select folder and file for file2
-    print("\n(2) Pilih folder dan file untuk audio yang akan dibandingkan")
-    print()
-    file2 = select_folder_and_file_compare(current_dir)
-    
-    # Threshold for DTW comparison
-    threshold = 150
-    
-    # Compare the two audio files
-    compare_result = compare_audio_files([file1] + file2, threshold)
-    
-    print()
-    print("----------------------------------------------------------------------------------------------------")
-    print()
-    
-    # Print the comparison results
-    print("\nHasil perbandingan:")
-    for result in compare_result:
-        print(f"{compare_result.index(result) + 1}. {result}")
-        
-    print()
+    dataset_dir = 'sound'
+    testcase_dir = 'test cases'
+
+    datasets = []
+    for root, dirs, files in os.walk(dataset_dir):
+        for file in files:
+            if file.endswith('.wav'):
+                datasets.append(os.path.join(root, file))
+
+    testcases = []
+    for root, dirs, files in os.walk(testcase_dir):
+        for file in files:
+            if file.endswith('.wav'):
+                testcases.append(os.path.join(root, file))
+
+    # Iterate through each file and extract MFCC
+    mfcc_dataset = {}
+    mfcc_test = {}
+
+    for filepath in datasets:
+        mfcc_feat = extract_mfcc(filepath)
+        mfcc_dataset[filepath] = mfcc_feat
+
+    for filepath in testcases:
+        mfcc_feat = extract_mfcc(filepath)
+        mfcc_test[filepath] = mfcc_feat
+
+    # Iterate and calculate the minimum distances
+    for testfile, testmfcc in mfcc_test.items():
+        print(f"----------- {testfile} -----------\n")
+
+        results = []
+        for datasetfile, datasetmfcc in mfcc_dataset.items():
+            distance = dtw(testmfcc, datasetmfcc)
+            results.append((distance, datasetfile))
+
+        results.sort(key=lambda x: x[0])
+        print(f"Test file: {testfile}")
+        for result in results[:5]: # Show only top 5 results
+            print(f"{result[1]}: {result[0]}")
+        print("\n\n")
