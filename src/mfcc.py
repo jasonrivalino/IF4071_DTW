@@ -5,6 +5,7 @@ from python_speech_features import mfcc
 def extract_mfcc(file_path):
     # Load the audio file
     rate, sig = wav.read(file_path)
-    # Extract MFCC features
-    mfcc_feat = mfcc(sig, rate)
+    
+    # Extract MFCC features with increased NFFT to avoid warning
+    mfcc_feat = mfcc(sig, rate, nfft=2048)  # Increased NFFT size to avoid truncation warning
     return mfcc_feat
