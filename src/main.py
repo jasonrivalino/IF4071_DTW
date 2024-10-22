@@ -2,153 +2,154 @@ import os
 from dtw import dtw
 from mfcc import extract_mfcc
 
-# Function to compare two audio files using DTW
-def compare_audio_files(selected_files, threshold=100.0):
-    # Check if there are at least two files to compare
-    if len(selected_files) < 2:
+# Function to compare two audio files using DTW and group them by vowel
+def compare_audio_files(directory_sound_input, directory_sound_compare):
+    if len(directory_sound_input) < 1 or len(directory_sound_compare) < 1:
         return "Not enough files to compare."
     
-    # Extract MFCC features from the first file
-    mfcc1 = extract_mfcc(selected_files[0])
+    # Extract vowel from file names for grouping (e.g., 'A', 'E', etc.)
+    test_file_groups = {}
     
-    results = []
-    
-    # Loop through the rest of the files and compare them to the first file
-    for file in selected_files[1:]:
-        # Extract MFCC features from the current file
-        mfcc2 = extract_mfcc(file)
+    # Group test files by their vowel (base name)
+    for testfile in directory_sound_compare:
+        vowel = os.path.basename(testfile).split(' ')[0]  # Extract base vowel (e.g., 'A')
         
-        # Calculate DTW similarity
-        distance = dtw(mfcc1, mfcc2)
+        if vowel not in test_file_groups:
+            test_file_groups[vowel] = []
+        test_file_groups[vowel].append(testfile)
+    
+    # Iterate through each group of test files (by vowel)
+    for vowel, testfiles in test_file_groups.items():
+        print(f"Voice files for vowel '{vowel}':")
+        print(f"Template files: [{', '.join([os.path.basename(f) for f in directory_sound_input])}]")
+        print(f"Test files: [{', '.join([os.path.basename(f) for f in testfiles])}]")
+        print()
+        print("Hasil perbandingan file audio:")
         
-        # Prepare the result message
-        if distance < threshold:
-            result = f"Sound between {os.path.basename(selected_files[0])} and {os.path.basename(file)} have {distance} distance"
-        else:
-            result = f"Sound between {os.path.basename(selected_files[0])} and {os.path.basename(file)} have {distance} distance"
+        results = []
         
-        # Append the result along with the distance for sorting
-        results.append((distance, result))
+        # Compare test files with template files that have the same vowel
+        for testfile in testfiles:
+            test_mfcc = extract_mfcc(testfile)
+            
+            for datasetfile in directory_sound_input:
+                dataset_vowel = os.path.basename(datasetfile).split(' ')[0]  # Extract base vowel (e.g., 'A')
+                
+                if vowel == dataset_vowel:  # Compare only if vowels match
+                    dataset_mfcc = extract_mfcc(datasetfile)
+                    distance = dtw(test_mfcc, dataset_mfcc)
+                    results.append((distance, testfile, datasetfile))
+        
+        # Sort results by distance
+        results.sort(key=lambda x: x[0])
+        
+        # Display the sorted results
+        for idx, result in enumerate(results, start=1):
+            print(f"{idx}. Sound between {os.path.basename(result[1])} and {os.path.basename(result[2])} have {result[0]} distance")
+        print("\n")
     
-    # Sort the results by distance (first element of the tuple)
-    results.sort(key=lambda x: x[0])
-    
-    # Extract only the result messages after sorting
-    sorted_results = [result for _, result in results]
-    
-    return sorted_results
+    return results
 
 # Function to select folder and file input
-def select_folder_and_file_input(current_dir):
-    # Access all folders in the sound directory and choose 1 sound from each folder
-    folders = os.listdir(os.path.join(current_dir, "..\\sound"))
+def select_folder_input(current_dir):
+    folders = os.listdir(os.path.join(current_dir, "..\\template"))
+    
     print("Pilih folder audio file:")
     for i, folder in enumerate(folders):
         print(f"{i+1}. {folder}")
     print()
     folder_choice = input("Masukkan pilihan dengan angka: ")
     
-    # Determine folder based on input
     folder = folders[int(folder_choice) - 1]
-    print(f"Folder yang dipilih: {folder}")
     
-    # Loop for selecting the file name
     while True:
-        file_input = input("\nTulis nama file audio input (tanpa format, e.g., input_sound): ")
+        datasets = []
+        directory_file = []
         
-        # Automatically append the file extension if the user doesn't include it
-        file_path_wav = os.path.join(current_dir, "..\\sound", folder, file_input + ".wav")
-        file_path_mp3 = os.path.join(current_dir, "..\\sound", folder, file_input + ".mp3")
+        print()
+        print(f"Folder yang dipilih: {folder}")
+        print(f"File .wav yang tersedia di folder ini:")
         
-        # Check if the file exists with .wav or .mp3 extension
-        if os.path.isfile(file_path_wav):
-            print(f"File ditemukan: {file_input}.wav")
+        for file in os.listdir(os.path.join(current_dir, "..\\template", folder)):
+            if file.endswith(".wav"):
+                datasets.append(file)
+                directory_file.append(os.path.join(current_dir, "..\\template", folder, file))
+                print(f"{len(datasets)}. {file}")
+        print()
+                
+        if not datasets:
+            print(f"Tidak ada file .wav di folder {folder}.")
             print()
-            return file_path_wav
-        elif os.path.isfile(file_path_mp3):
-            print(f"File ditemukan: {file_input}.mp3")
-            print()
-            return file_path_mp3
+            folder_choice = input("Masukkan pilihan dengan angka: ")
+            folder = folders[int(folder_choice) - 1]            
         else:
-            print("File tidak ditemukan, coba lagi.")
-            
+            return [datasets, directory_file]
+
 # Function to select folder and file compare
-def select_folder_and_file_compare(current_dir):
-    # Access all folders in the sound directory and display them
-    sound_dir = os.path.join(current_dir, "..\\sound")
-    folders = os.listdir(sound_dir)
+def select_folder_compare(current_dir):
+    folders = os.listdir(os.path.join(current_dir, "..\\test"))
     
     print("Pilih folder audio file:")
     for i, folder in enumerate(folders):
         print(f"{i+1}. {folder}")
     print()
     
-    # Let the user choose a folder
     folder_choice = input("Masukkan pilihan dengan angka: ")
     
-    # Determine the folder based on user input
     folder = folders[int(folder_choice) - 1]
-    print(f"Folder yang dipilih: {folder}")
     
-    # Build the path to the chosen folder
-    chosen_folder_path = os.path.join(sound_dir, folder)
-    
-    # Get all .wav files in the chosen folder
-    wav_files = [file for file in os.listdir(chosen_folder_path) if file.endswith(".wav")]
-    
-    if not wav_files:
-        print(f"Tidak ada file .wav di folder {folder}.")
-        return None
-    
-    # Print all .wav files found in the chosen folder
-    print(f"\nFile .wav yang tersedia di folder {folder}:")
-    for i, file in enumerate(wav_files):
-        print(f"{i+1}. {file}")
-    print()
-    
-    # Return the list of .wav files with their full paths
-    return [os.path.join(chosen_folder_path, file) for file in wav_files]
+    while True:
+        testcases = []
+        directory_file = []
+        
+        print()
+        print(f"Folder yang dipilih: {folder}")
+        print(f"File .wav yang tersedia di folder ini:")
+        
+        for file in os.listdir(os.path.join(current_dir, "..\\test", folder)):
+            if file.endswith(".wav"):
+                testcases.append(file)
+                directory_file.append(os.path.join(current_dir, "..\\test", folder, file))
+                print(f"{len(testcases)}. {file}")
+        print()
+                
+        if not testcases:
+            print(f"Tidak ada file .wav di folder {folder}.")
+            print()
+            folder_choice = input("Masukkan pilihan dengan angka: ")
+            folder = folders[int(folder_choice) - 1]            
+        else:
+            return testcases, directory_file
 
 # Main function to compare all test cases
 if __name__ == "__main__":
-    dataset_dir = 'sound'
-    testcase_dir = 'test cases'
-
-    datasets = []
-    for root, dirs, files in os.walk(dataset_dir):
-        for file in files:
-            if file.endswith('.wav'):
-                datasets.append(os.path.join(root, file))
-
-    testcases = []
-    for root, dirs, files in os.walk(testcase_dir):
-        for file in files:
-            if file.endswith('.wav'):
-                testcases.append(os.path.join(root, file))
-
-    # Iterate through each file and extract MFCC
-    mfcc_dataset = {}
-    mfcc_test = {}
-
-    for filepath in datasets:
-        mfcc_feat = extract_mfcc(filepath)
-        mfcc_dataset[filepath] = mfcc_feat
-
-    for filepath in testcases:
-        mfcc_feat = extract_mfcc(filepath)
-        mfcc_test[filepath] = mfcc_feat
-
-    # Iterate and calculate the minimum distances
-    for testfile, testmfcc in mfcc_test.items():
-        print(f"----------- {testfile} -----------\n")
-
-        results = []
-        for datasetfile, datasetmfcc in mfcc_dataset.items():
-            distance = dtw(testmfcc, datasetmfcc)
-            results.append((distance, datasetfile))
-
-        results.sort(key=lambda x: x[0])
-        print(f"Test file: {testfile}")
-        for result in results[:5]: # Show only top 5 results
-            print(f"{result[1]}: {result[0]}")
-        print("\n\n")
+    dataset_dir = 'template'
+    testcase_dir = 'test'
+    
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    print(f"Current directory: {current_dir}")
+    
+    print("\n(1) Pilih folder dalam template untuk audio input")
+    print()
+    [sound_input, directory_sound_input] = select_folder_input(current_dir)
+    print("Daftar file yang tersedia di folder sound input: ")
+    print(sound_input)
+    
+    print()
+    print()
+    print("----------------------------------------------------------------------------------------------------")
+    print()
+    
+    print("\n(2) Pilih folder dalam test untuk audio yang akan dibandingkan")
+    print()
+    [sound_compare, directory_sound_compare] = select_folder_compare(current_dir)
+    print("Daftar file yang tersedia di sound compare: ")
+    print(sound_compare)
+    
+    print()
+    print()
+    print("----------------------------------------------------------------------------------------------------")
+    print()
+    print()
+    
+    compare_result = compare_audio_files(directory_sound_input, directory_sound_compare)
