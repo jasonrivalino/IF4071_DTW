@@ -17,6 +17,9 @@ def compare_audio_files(directory_sound_input, directory_sound_compare):
         if vowel not in test_file_groups:
             test_file_groups[vowel] = []
         test_file_groups[vowel].append(testfile)
+        
+    # List to store average distances for each vowel group
+    average_distances = []
     
     # Iterate through each group of test files (by vowel)
     for vowel, testfiles in test_file_groups.items():
@@ -33,7 +36,8 @@ def compare_audio_files(directory_sound_input, directory_sound_compare):
             test_mfcc = extract_mfcc(testfile)
             
             for datasetfile in directory_sound_input:
-                dataset_vowel = os.path.basename(datasetfile).split(' ')[0]  # Extract base vowel (e.g., 'A')
+                # Extract base vowel (e.g., 'A')
+                dataset_vowel = os.path.basename(datasetfile).split(' ')[0]
                 
                 if vowel == dataset_vowel:  # Compare only if vowels match
                     dataset_mfcc = extract_mfcc(datasetfile)
@@ -46,9 +50,15 @@ def compare_audio_files(directory_sound_input, directory_sound_compare):
         # Display the sorted results
         for idx, result in enumerate(results, start=1):
             print(f"{idx}. Sound between {os.path.basename(result[1])} and {os.path.basename(result[2])} have {result[0]} distance")
-        print("\n")
-    
-    return results
+        
+        # Calculate and print average distance, then append to average_distances list
+        average = sum([x[0] for x in results]) / len(results)
+        print(f"Jarak rata-rata untuk vokal '{vowel}': {average}\n\n\n")
+        
+        # Append average distance for the vowel group
+        average_distances.append(average)
+        
+    return average_distances
 
 # Function to select folder and file input
 def select_folder_input(current_dir):
@@ -152,4 +162,23 @@ if __name__ == "__main__":
     print()
     print()
     
+    print("MENAMPILKAN INFORMASI PERBANDINGAN SUARA:")
+    print()
     compare_result = compare_audio_files(directory_sound_input, directory_sound_compare)
+
+    print("----------------------------------------------------------------------------------------------------")
+    print()
+    print()
+    print()
+    
+    # Show final information
+    template_folder_name = os.path.basename(os.path.dirname(directory_sound_input[0]))
+    test_folder_name = os.path.basename(os.path.dirname(directory_sound_compare[0]))
+    
+    print("INFORMASI AKHIR: ")
+    print(f"Audio template yang dipilih yaitu: {template_folder_name}")
+    print(f"Audio test yang dipilih yaitu: {test_folder_name}")
+    print(f"Hasil perbandingan file audio untuk semua vokal: {compare_result}")
+    all_average = sum(compare_result) / len(compare_result)
+    print(f"Jarak rata-rata untuk semua vokal: {all_average}")
+    print()
