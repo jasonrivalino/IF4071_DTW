@@ -60,6 +60,59 @@ def compare_audio_files(directory_sound_input, directory_sound_compare):
         
     return average_distances
 
+def compare_all_audio_files(directory_sound_input, directory_sound_compare):
+    if len(directory_sound_input) < 1 or len(directory_sound_compare) < 1:
+        return "Not enough files to compare."
+    
+    # List to store average distances for each comparison
+    average_distances = []
+    correct_count = 0
+    total_count = 0
+    
+    # Iterate through each template file
+    for templatefile in directory_sound_input:
+        template_vowel = os.path.basename(templatefile).split(' ')[0]  # Extract base vowel (e.g., 'A')
+        print(f"Comparing template file '{os.path.basename(templatefile)}' with test files:")
+        
+        results = []
+        
+        # Compare each test file with the current template file
+        template_mfcc = extract_mfcc(templatefile)
+        for testfile in directory_sound_compare:
+            test_mfcc = extract_mfcc(testfile)
+            distance = dtw(template_mfcc, test_mfcc)
+            results.append((distance, testfile))
+        
+        # Sort results by distance
+        results.sort(key=lambda x: x[0])
+        
+        # Display the sorted results
+        for idx, result in enumerate(results, start=1):
+            print(f"{idx}. Sound between {os.path.basename(templatefile)} and {os.path.basename(result[1])} have {result[0]} distance")
+        
+        # Check if the shortest distance is to the correct vowel
+        closest_testfile = results[0][1]
+        closest_vowel = os.path.basename(closest_testfile).split(' ')[0]
+        is_correct = (template_vowel == closest_vowel)
+        print(f"Shortest distance for '{os.path.basename(templatefile)}' is to '{os.path.basename(closest_testfile)}' - {'Correct' if is_correct else 'Incorrect'}")
+        
+        # Update correct count and total count
+        if is_correct:
+            correct_count += 1
+        total_count += 1
+        
+        # Calculate and print average distance, then append to average_distances list
+        average = sum([x[0] for x in results]) / len(results)
+        print(f"Jarak rata-rata untuk template '{os.path.basename(templatefile)}': {average}\n\n\n")
+        
+        # Append average distance for the template file
+        average_distances.append(average)
+    
+    # Calculate accuracy
+    accuracy = (correct_count / total_count) * 100
+    
+    return accuracy
+
 # Function to select folder and file input
 def select_folder_input(current_dir):
     folders = os.listdir(os.path.join(current_dir, "..\\template"))
@@ -131,14 +184,7 @@ def select_folder_compare(current_dir):
         else:
             return testcases, directory_file
 
-# Main function to compare all test cases
-if __name__ == "__main__":
-    dataset_dir = 'template'
-    testcase_dir = 'test'
-    
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    print(f"Current directory: {current_dir}")
-    
+def main_option_1(current_dir):
     print("\n(1) Pilih folder dalam template untuk audio input")
     print()
     [sound_input, directory_sound_input] = select_folder_input(current_dir)
@@ -182,3 +228,61 @@ if __name__ == "__main__":
     all_average = sum(compare_result) / len(compare_result)
     print(f"Jarak rata-rata untuk semua vokal: {all_average}")
     print()
+
+def main_option_2(current_dir):
+    print("\n(1) Pilih folder dalam template untuk audio input")
+    print()
+    [sound_input, directory_sound_input] = select_folder_input(current_dir)
+    print("Daftar file yang tersedia di folder sound input: ")
+    print(sound_input)
+    
+    print()
+    print()
+    print("----------------------------------------------------------------------------------------------------")
+    print()
+    
+    print("\n(2) Pilih folder dalam test untuk audio yang akan dibandingkan")
+    print()
+    [sound_compare, directory_sound_compare] = select_folder_compare(current_dir)
+    print("Daftar file yang tersedia di sound compare: ")
+    print(sound_compare)
+    
+    print()
+    print()
+    print("----------------------------------------------------------------------------------------------------")
+    print()
+    print()
+
+    print("MENAMPILKAN INFORMASI PERBANDINGAN SUARA:")
+    print()
+    accuracy = compare_all_audio_files(directory_sound_input, directory_sound_compare)
+
+    print("----------------------------------------------------------------------------------------------------")
+    # Show final information
+    template_folder_name = os.path.basename(os.path.dirname(directory_sound_input[0]))
+    test_folder_name = os.path.basename(os.path.dirname(directory_sound_compare[0]))
+    
+    print("INFORMASI AKHIR: ")
+    print(f"Audio template yang dipilih yaitu: {template_folder_name}")
+    print(f"Audio test yang dipilih yaitu: {test_folder_name}")
+    print(f"Akurasi total: {accuracy}%")
+    print()
+
+def main():
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    print(f"Current directory: {current_dir}")
+    
+    print("Pilih opsi:")
+    print("1. Melakukan perhitungan jarak antara file audio")
+    print("2. Menghitung akurasi total")
+    choice = input("Masukkan pilihan Anda (1/2): ")
+
+    if choice == '1':
+        main_option_1(current_dir)
+    elif choice == '2':
+        main_option_2(current_dir)
+    else:
+        print("Pilihan tidak valid. Silakan coba lagi.")
+
+if __name__ == "__main__":
+    main()
