@@ -258,6 +258,10 @@ def main_option_2(current_dir):
     accuracy = compare_all_audio_files(directory_sound_input, directory_sound_compare)
 
     print("----------------------------------------------------------------------------------------------------")
+    print()
+    print()
+    print()
+    
     # Show final information
     template_folder_name = os.path.basename(os.path.dirname(directory_sound_input[0]))
     test_folder_name = os.path.basename(os.path.dirname(directory_sound_compare[0]))
