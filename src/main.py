@@ -123,6 +123,10 @@ def select_folder_input(current_dir):
     print()
     folder_choice = input("Masukkan pilihan dengan angka: ")
     
+    while int(folder_choice) < 1 or int(folder_choice) > len(folders):
+        print("Pilihan tidak valid.")
+        folder_choice = input("Masukkan pilihan dengan angka: ")
+    
     folder = folders[int(folder_choice) - 1]
     
     while True:
@@ -158,6 +162,10 @@ def select_folder_compare(current_dir):
     print()
     
     folder_choice = input("Masukkan pilihan dengan angka: ")
+    
+    while int(folder_choice) < 1 or int(folder_choice) > len(folders):
+        print("Pilihan tidak valid.")
+        folder_choice = input("Masukkan pilihan dengan angka: ")
     
     folder = folders[int(folder_choice) - 1]
     
@@ -281,12 +289,14 @@ def main():
     print("2. Menghitung akurasi total")
     choice = input("Masukkan pilihan Anda (1/2): ")
 
-    if choice == '1':
+    while choice != "1" and choice != "2":
+        print("Pilihan tidak valid.")
+        choice = input("Masukkan pilihan Anda (1/2): ")
+        
+    if choice == "1":
         main_option_1(current_dir)
-    elif choice == '2':
+    elif choice == "2":
         main_option_2(current_dir)
-    else:
-        print("Pilihan tidak valid. Silakan coba lagi.")
 
 if __name__ == "__main__":
     main()
