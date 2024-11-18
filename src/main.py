@@ -1,5 +1,5 @@
 import os
-from dtw import dtw
+from dtw import dtw, dtw_library
 from mfcc import extract_mfcc
 import numpy as np
 
@@ -154,8 +154,28 @@ def select_folder_input(current_dir):
             return [datasets, directory_file]
 
 # Function to select folder and file compare
-def select_folder_compare(current_dir):
-    folders = os.listdir(os.path.join(current_dir, "..\\test"))
+def select_folder_compare(current_dir, speakers_split=False):
+    if speakers_split:
+        # Choose test folder from seen_speakers folder or unseen_speakers folder
+        print("Pilih folder audio file untuk perbandingan:")
+        print("1. Seen Speakers")
+        print("2. Unseen Speakers")
+        folder_choice = input("Masukkan pilihan dengan angka: ")
+        print()
+        
+        while folder_choice not in ["1", "2"]:
+            print("Pilihan tidak valid.")
+            folder_choice = input("Masukkan pilihan dengan angka: ")
+            
+        if folder_choice == "1":
+            directory_name = "..\\test\\seen_speakers"
+        else:
+            directory_name = "..\\test\\unseen_speakers"
+    else:
+        directory_name = "..\\test\\seen_speakers"
+    
+    
+    folders = os.listdir(os.path.join(current_dir, directory_name))
     
     print("Pilih folder audio file:")
     for i, folder in enumerate(folders):
@@ -178,10 +198,10 @@ def select_folder_compare(current_dir):
         print(f"Folder yang dipilih: {folder}")
         print(f"File .wav yang tersedia di folder ini:")
         
-        for file in os.listdir(os.path.join(current_dir, "..\\test", folder)):
+        for file in os.listdir(os.path.join(current_dir, directory_name, folder)):
             if file.endswith(".wav"):
                 testcases.append(file)
-                directory_file.append(os.path.join(current_dir, "..\\test", folder, file))
+                directory_file.append(os.path.join(current_dir, directory_name, folder, file))
                 print(f"{len(testcases)}. {file}")
         print()
                 
@@ -237,7 +257,7 @@ def compute_average_templates(template_folders):
 
     return average_templates
 
-def compare_with_average_templates(average_templates, test_files):
+def compare_with_average_templates(average_templates, test_files, comparison_option):
     results = {}
 
     for testfile in test_files:
@@ -258,12 +278,22 @@ def compare_with_average_templates(average_templates, test_files):
 
     for speaker, tests in results.items():
         print(f"\n{speaker}")
-        print("Audio\t\tA\t\tE\t\tI\t\tO\t\tU")
+        if comparison_option == "1":
+            # Extract only the vowels for the header
+            vowels = [test[0].split()[0] for test in tests]  # Extract the first part of the filename as the vowel
+            print("Audio Vowel\t\t" + "\t\t".join(vowels))
+        else:
+            print("Audio Vowel\t\tA\t\tE\t\tI\t\tO\t\tU")
 
         # Calculate and print averages
-        avg_distances = {vowel: np.mean([distances[vowel] for _, distances in tests]) for vowel in ['A', 'E', 'I', 'O', 'U']}
-        avg_distances_str = "\t".join([f"{avg_distances[vowel]:.6f}" for vowel in ['A', 'E', 'I', 'O', 'U']])
-        print(f"Average\t\t{avg_distances_str}")
+        if comparison_option == "1":
+            avg_distances = {vowel: np.mean([distances[vowel] for _, distances in tests]) for vowel in vowels}
+            avg_distances_str = "\t".join([f"{avg_distances[vowel]:.6f}" for vowel in vowels])
+            print(f"Average Compare\t\t{avg_distances_str}")
+        else:
+            avg_distances = {vowel: np.mean([distances[vowel] for _, distances in tests]) for vowel in ['A', 'E', 'I', 'O', 'U']}
+            avg_distances_str = "\t".join([f"{avg_distances[vowel]:.6f}" for vowel in ['A', 'E', 'I', 'O', 'U']])
+            print(f"Average Compare\t\t{avg_distances_str}")
 
     return results
 
@@ -361,20 +391,62 @@ def main_average_templates():
     # Define template folders
     template_folders = ["Faris (Template)", "Jason (Template)", "Louis (Template)", "Satria (Template)"]
     
+    print()
+    print()
+    print("----------------------------------------------------------------------------------------------------")
+    print()
+    print()
+    
     # Compute average templates
     print("Computing average templates...")
     average_templates = compute_average_templates(template_folders)
     print("Average templates computed successfully.")
     
+    print()
+    print()
+    print("----------------------------------------------------------------------------------------------------")
+    print()
+    print()
+    
     # Select test folder
-    print("\n(1) Pilih folder dalam test untuk audio yang akan dibandingkan")
-    [sound_compare, directory_sound_compare] = select_folder_compare(current_dir)
+    print("(1) Pilih folder dalam test untuk audio yang akan dibandingkan")
+    [sound_compare, directory_sound_compare] = select_folder_compare(current_dir, speakers_split=True)
     print("Daftar file yang tersedia di sound compare: ")
     print(sound_compare)
     
-    # Compare using averaged templates
-    print("\n(2) Perhitungan dengan menggunakan average template:")
-    compare_with_average_templates(average_templates, directory_sound_compare)
+    print()
+    print()
+    print("----------------------------------------------------------------------------------------------------")
+    print()
+    print()
+    
+    # Choose option between same vowel or all vowels
+    print("Pilih opsi pencocokan dengan template rata-rata:")
+    print("1. Pencocokan dengan template rata-rata untuk vokal yang sama")
+    print("2. Pencocokan dengan template rata-rata untuk semua vokal")
+    
+    comparison_option = input("Masukkan pilihan Anda (1/2): ")
+    
+    while comparison_option not in ["1", "2"]:
+        print("Pilihan tidak valid.")
+        comparison_option = input("Masukkan pilihan Anda (1/2): ")
+        
+    print()
+    print()
+    print("----------------------------------------------------------------------------------------------------")
+    print()
+    print()
+        
+    if comparison_option == "1":
+        # Compare using same vowel
+        print("(2) Perhitungan dengan menggunakan average template untuk vokal yang sama:")
+        compare_with_average_templates(average_templates, directory_sound_compare, comparison_option)
+        print()
+    else:    
+        # Compare using averaged templates
+        print("(2) Perhitungan dengan menggunakan average template untuk semua vokal:")
+        compare_with_average_templates(average_templates, directory_sound_compare, comparison_option)
+        print()
 
 def main():
     current_dir = os.path.dirname(os.path.abspath(__file__))

@@ -1,4 +1,6 @@
 import numpy as np
+from fastdtw import fastdtw
+from scipy.spatial.distance import euclidean
 from scipy.spatial.distance import cdist
 
 # Dynamic Time Warping (DTW) function to calculate similarity between two feature sets
@@ -22,3 +24,9 @@ def dtw(x, y, dist_func='euclidean'):
                                               acc_cost[i - 1, j - 1])
     
     return acc_cost[-1, -1]  # Return the final cost (similarity score)
+
+# Example DTW implementation using the fastdtw library
+def dtw_library(x, y, dist_func=euclidean):
+    # fastdtw requires the distance metric to be passed separately
+    distance, _ = fastdtw(x, y, dist=dist_func)
+    return distance
