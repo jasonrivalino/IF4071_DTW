@@ -1,5 +1,7 @@
 # Tugas 2 Pemrosesan Ucapan - IF4071
-> Tugas 2: Eksplorasi Pemrosesan Suara dengan Dynamic Time Warping (DTW)
+> Tugas 2.1: Eksplorasi Pemrosesan Suara dengan Dynamic Time Warping (DTW)
+
+> Tugas 2.2: Sistem Pengenal Suara Generalized Template
 
 ## Anggota Kelompok
 <table>
@@ -39,11 +41,23 @@
 * [Acknowledgements](#acknowledgements)
 
 ## Spesifikasi Tugas
+### Tugas 2.1
 - Membuat sebuah sistem pengenal ucapan menggunakan DTW menggunakan bahasa pemrograman Python
 - Ekstraksi fitur menggunakan MFCC 39 dimensi (https://python-speech-features.readthedocs.io/en/latest/)
 - Dictionary berisi 5 vowel (a, i, u, e, o template direkam dari tiga orang anggota kelompok, data uji direkam dari 3 orang anggota kelompok)
 - Lakukan perhitungan akurasi untuk skenario pengujian:
 - Setiap template satu orang diuji dengan menggunakan suara dari 3 orang (1 suara yang sama dengan template dan dua suara yang berbeda dengan template)
+- Lakukan analisis hasil eksperimen
+
+### Tugas 2.2
+- Membuat sebuah sistem pengenal ucapan menggunakan Average Template untuk mengenali bunyi a, i, u e, o
+- Ekstraksi fitur menggunakan MFCC 39 dimensi
+- Dictionary berisi 5 vowel (a, i, u, e, o)
+- Template setiap vowel berasal dari perhitungan rata-rata audio yang direkam dari seluruh anggota kelas (diambil dari tugas sebelumya)
+- Data uji: direkam dari 3 orang anggota kelompok (bisa diambil dari tugas sebelumnya), dan 3 suara lain di luar kelas ini.
+- Lakukan perhitungan akurasi untuk skenario pengujian. Setiap average template satu vowel diuji dengan menggunakan suara dari:
+  - 3 orang anggota kelompok (seen speakers)
+  - 3 orang suara di luar kelas ini (unseen speakers)
 - Lakukan analisis hasil eksperimen
 
 ## Struktur File
