@@ -1,6 +1,7 @@
 import os
 from dtw import dtw
 from mfcc import extract_mfcc
+import numpy as np
 
 # Function to compare two audio files using DTW and group them by vowel
 def compare_audio_files(directory_sound_input, directory_sound_compare):
@@ -192,6 +193,80 @@ def select_folder_compare(current_dir):
         else:
             return testcases, directory_file
 
+def pad_to_longest_mfccs(mfcc_list):
+    """
+    Pads MFCC arrays in the list to match the longest array's first dimension.
+    Only pads arrays with less dimension.
+    """
+    max_length = max(mfcc.shape[0] for mfcc in mfcc_list)
+    padded_mfccs = []
+
+    for mfcc in mfcc_list:
+        if mfcc.shape[0] < max_length:
+            # Pad with zeros only to match max length
+            padded = np.pad(mfcc, ((0, max_length - mfcc.shape[0]), (0, 0)), mode='constant')
+            padded_mfccs.append(padded)
+        else:
+            # No padding needed
+            padded_mfccs.append(mfcc)
+
+    return np.array(padded_mfccs)
+
+# Use this function before computing the mean
+def compute_average_templates(template_folders):
+    """Computes average MFCC templates for each vowel."""
+    vowels = ['A', 'I', 'U', 'E', 'O']
+    average_templates = {}
+
+    for vowel in vowels:
+        mfcc_list = []
+        for folder in template_folders:
+            all_files = os.listdir(os.path.join("template", folder))
+
+            files = [f for f in all_files if f.startswith(vowel) and f.endswith('.wav')]
+
+            for file in files:
+                file_path = os.path.join("template", folder, file)
+                mfcc_list.append(extract_mfcc(file_path))
+
+        if mfcc_list:
+            # Pad only the shorter MFCCs to match the longest
+            padded_mfccs = pad_to_longest_mfccs(mfcc_list)
+            # Compute the mean
+            average_templates[vowel] = np.mean(padded_mfccs, axis=0)
+
+    return average_templates
+
+def compare_with_average_templates(average_templates, test_files):
+    results = {}
+
+    for testfile in test_files:
+        test_vowel = os.path.basename(testfile).split(' ')[0]
+        test_mfcc = extract_mfcc(testfile)
+        distances = {}
+
+        if test_vowel in average_templates:
+            for vowel, avg_template_mfcc in average_templates.items():
+                # Use your custom DTW function here
+                distance = dtw(test_mfcc, avg_template_mfcc)
+                distances[vowel] = distance
+
+            speaker_name = os.path.basename(testfile).split('_')[0]  # Adjust based on your filename format
+            if speaker_name not in results:
+                results[speaker_name] = []
+            results[speaker_name].append((os.path.basename(testfile), distances))
+
+    for speaker, tests in results.items():
+        print(f"\n{speaker}")
+        print("Audio\t\tA\t\tE\t\tI\t\tO\t\tU")
+
+        # Calculate and print averages
+        avg_distances = {vowel: np.mean([distances[vowel] for _, distances in tests]) for vowel in ['A', 'E', 'I', 'O', 'U']}
+        avg_distances_str = "\t".join([f"{avg_distances[vowel]:.6f}" for vowel in ['A', 'E', 'I', 'O', 'U']])
+        print(f"Average\t\t{avg_distances_str}")
+
+    return results
+
 def main_option_1(current_dir):
     print("\n(1) Pilih folder dalam template untuk audio input")
     print()
@@ -280,6 +355,27 @@ def main_option_2(current_dir):
     print(f"Akurasi total: {accuracy}%")
     print()
 
+def main_average_templates():
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    
+    # Define template folders
+    template_folders = ["Faris (Template)", "Jason (Template)", "Louis (Template)", "Satria (Template)"]
+    
+    # Compute average templates
+    print("Computing average templates...")
+    average_templates = compute_average_templates(template_folders)
+    print("Average templates computed successfully.")
+    
+    # Select test folder
+    print("\n(1) Pilih folder dalam test untuk audio yang akan dibandingkan")
+    [sound_compare, directory_sound_compare] = select_folder_compare(current_dir)
+    print("Daftar file yang tersedia di sound compare: ")
+    print(sound_compare)
+    
+    # Compare using averaged templates
+    print("\n(2) Perhitungan dengan menggunakan average template:")
+    compare_with_average_templates(average_templates, directory_sound_compare)
+
 def main():
     current_dir = os.path.dirname(os.path.abspath(__file__))
     print(f"Current directory: {current_dir}")
@@ -287,16 +383,19 @@ def main():
     print("Pilih opsi:")
     print("1. Melakukan perhitungan jarak antara file audio")
     print("2. Menghitung akurasi total")
-    choice = input("Masukkan pilihan Anda (1/2): ")
+    print("3. Menggunakan template rata-rata untuk perbandingan")
+    choice = input("Masukkan pilihan Anda (1/2/3): ")
 
-    while choice != "1" and choice != "2":
+    while choice not in ["1", "2", "3"]:
         print("Pilihan tidak valid.")
-        choice = input("Masukkan pilihan Anda (1/2): ")
+        choice = input("Masukkan pilihan Anda (1/2/3): ")
         
     if choice == "1":
         main_option_1(current_dir)
     elif choice == "2":
         main_option_2(current_dir)
+    elif choice == "3":
+        main_average_templates()
 
 if __name__ == "__main__":
     main()
