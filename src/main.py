@@ -280,7 +280,7 @@ def compare_with_average_templates(average_templates, test_files, comparison_opt
             results[speaker_name].append((os.path.basename(testfile), distances))
 
     for speaker, tests in results.items():
-        print(f"\n{speaker}")
+        print(f"\nTemplate Vowel '{speaker[0]}' compare to '{speaker[2:]}'")
         if comparison_option == "1":
             # Extract only the vowels for the header
             vowels = [test[0].split()[0] for test in tests]  # Extract the first part of the filename as the vowel
@@ -314,6 +314,7 @@ def compare_with_average_templates(average_templates, test_files, comparison_opt
     # Calculate accuracy
     if comparison_option != '1':
         accuracy = (correct_count / total_count) * 100
+        print()
         print(f"Akurasi total: {accuracy}%")
     
     return results
