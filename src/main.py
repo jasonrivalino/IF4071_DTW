@@ -259,6 +259,9 @@ def compute_average_templates(template_folders):
 
 def compare_with_average_templates(average_templates, test_files, comparison_option):
     results = {}
+    sorted_distance = {}
+    correct_count = 0
+    total_count = 0
 
     for testfile in test_files:
         test_vowel = os.path.basename(testfile).split(' ')[0]
@@ -294,7 +297,25 @@ def compare_with_average_templates(average_templates, test_files, comparison_opt
             avg_distances = {vowel: np.mean([distances[vowel] for _, distances in tests]) for vowel in ['A', 'E', 'I', 'O', 'U']}
             avg_distances_str = "\t".join([f"{avg_distances[vowel]:.6f}" for vowel in ['A', 'E', 'I', 'O', 'U']])
             print(f"Average Compare\t\t{avg_distances_str}")
+        
+            # Sort results by distance
+            sorted_distance = sorted(avg_distances.items(), key=lambda x: x[1])
 
+            # Check if the shortest distance is to the correct vowel
+            closest_vowel = sorted_distance[0][0]
+            is_correct = (speaker[0] == closest_vowel)
+            print(f"Shortest distance for Average Template Vowel '{speaker[0]}' is to '{closest_vowel}' - {'Correct' if is_correct else 'Incorrect'}")
+                
+            # Update correct count and total count
+            if is_correct:
+                correct_count += 1
+            total_count += 1
+
+    # Calculate accuracy
+    if comparison_option != '1':
+        accuracy = (correct_count / total_count) * 100
+        print(f"Akurasi total: {accuracy}%")
+    
     return results
 
 def main_option_1(current_dir):
