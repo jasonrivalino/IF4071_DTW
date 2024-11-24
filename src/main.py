@@ -411,7 +411,7 @@ def main_average_templates():
     current_dir = os.path.dirname(os.path.abspath(__file__))
     
     # Define template folders
-    template_folders = ["Faris (Template)", "Jason (Template)", "Louis (Template)", "Satria (Template)"]
+    template_folders = ["Faris (Template)", "Jason (Template)", "Louis (Template)", "Satria (Template)", "Bagas (Template)", "Juan Template", "Nathan (Template)", "Nathania (Template)", "P1 (Template)", "P2 (Template)", "P3 (Template)", "Salomo (Template)", "Shidqi (Template)"]
     
     print()
     print()
