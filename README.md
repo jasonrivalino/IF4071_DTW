@@ -22,12 +22,12 @@
     </tr>
     </tr>
     <tr>
-        <td>1.</td>
+        <td>3.</td>
         <td>Satria Octavianus Nababan</td>
         <td>13521168</td>
     </tr>
     <tr>
-        <td>2.</td>
+        <td>4.</td>
         <td>Faris Fadhilah</td>
         <td>13518026</td>
     </tr>
