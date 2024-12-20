@@ -21,26 +21,4 @@ def extract_mfcc(file_path, sigma=1):
     # Apply Gaussian preprocessing to the MFCC features
     mfcc_smooth = gaussian_preprocessing(mfcc_feat)
     
-    # Visualize the MFCC features
-    # plt.figure(figsize=(12, 6))
-        
-    # Original MFCC
-    # plt.subplot(1, 2, 1)
-    # plt.imshow(mfcc_feat.T, aspect='auto', origin='lower', cmap='viridis')
-    # plt.title("Original MFCC")
-    # plt.colorbar(label='Amplitude')
-    # plt.xlabel("Time Frame")
-    # plt.ylabel("MFCC Coefficient")
-        
-    # Smoothed MFCC
-    # plt.subplot(1, 2, 2)
-    # plt.imshow(mfcc_smooth.T, aspect='auto', origin='lower', cmap='viridis')
-    # plt.title(f"Smoothed MFCC (σ={sigma})")
-    # plt.colorbar(label='Amplitude')
-    # plt.xlabel("Time Frame")
-    # plt.ylabel("MFCC Coefficient")
-        
-    # plt.tight_layout()
-    # plt.show()
-    
     return mfcc_smooth

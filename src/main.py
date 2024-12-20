@@ -1,6 +1,7 @@
 import os
-from dtw import dtw, dtw_library
+from dtw import dtw
 from mfcc import extract_mfcc
+from dtw_compare import dtw_library_euclidean, dtw_library_manhattan, dtw_library_chebyshev, dtw_library_cosine, dtw_library_mahalanobis
 import numpy as np
 
 # Function to compare two audio files using DTW and group them by vowel
@@ -213,25 +214,6 @@ def select_folder_compare(current_dir, speakers_split=False):
         else:
             return testcases, directory_file
 
-def pad_to_longest_mfccs(mfcc_list):
-    """
-    Pads MFCC arrays in the list to match the longest array's first dimension.
-    Only pads arrays with less dimension.
-    """
-    max_length = max(mfcc.shape[0] for mfcc in mfcc_list)
-    padded_mfccs = []
-
-    for mfcc in mfcc_list:
-        if mfcc.shape[0] < max_length:
-            # Pad with zeros only to match max length
-            padded = np.pad(mfcc, ((0, max_length - mfcc.shape[0]), (0, 0)), mode='constant')
-            padded_mfccs.append(padded)
-        else:
-            # No padding needed
-            padded_mfccs.append(mfcc)
-
-    return np.array(padded_mfccs)
-
 # Align the mfcc first
 def align_mfccs(mfcc_list):
     max_frames = max(mfcc.shape[0] for mfcc in mfcc_list)
@@ -274,20 +256,44 @@ def compute_average_templates(template_folders):
 
 def compare_with_average_templates(average_templates, test_files, comparison_option):
     results = {}
-    sorted_distance = {}
-    correct_count = 0
-    total_count = 0
+
+    # Initialize counters for each metric
+    correct_counts = {
+        "euclidean": 0,
+        "manhattan": 0,
+        "chebyshev": 0,
+        "cosine": 0,
+        "mahalanobis": 0,
+    }
+    total_counts = {
+        "euclidean": 0,
+        "manhattan": 0,
+        "chebyshev": 0,
+        "cosine": 0,
+        "mahalanobis": 0,
+    }
 
     for testfile in test_files:
         test_vowel = os.path.basename(testfile).split(' ')[0]
         test_mfcc = extract_mfcc(testfile)
-        distances = {}
+        distances = {
+            "euclidean": {},
+            "manhattan": {},
+            "chebyshev": {},
+            "cosine": {},
+            "mahalanobis": {},
+        }
 
         if test_vowel in average_templates:
             for vowel, avg_template_mfcc in average_templates.items():
-                # Use your custom DTW function here
-                distance = dtw(test_mfcc, avg_template_mfcc)
-                distances[vowel] = distance
+                # Calculate distances using all DTW functions
+                distances["euclidean"][vowel] = dtw_library_euclidean(test_mfcc, avg_template_mfcc)
+                distances["manhattan"][vowel] = dtw_library_manhattan(test_mfcc, avg_template_mfcc)
+                distances["chebyshev"][vowel] = dtw_library_chebyshev(test_mfcc, avg_template_mfcc)
+                distances["cosine"][vowel] = dtw_library_cosine(test_mfcc, avg_template_mfcc)
+                distances["mahalanobis"][vowel] = dtw_library_mahalanobis(
+                    test_mfcc, avg_template_mfcc, np.linalg.inv(np.cov(avg_template_mfcc.T))
+                )
 
             speaker_name = os.path.basename(testfile).split('_')[0]  # Adjust based on your filename format
             if speaker_name not in results:
@@ -296,43 +302,44 @@ def compare_with_average_templates(average_templates, test_files, comparison_opt
 
     for speaker, tests in results.items():
         print(f"\nTemplate Vowel '{speaker[0]}' compare to '{speaker[2:]}'")
-        if comparison_option == "1":
-            # Extract only the vowels for the header
-            vowels = [test[0].split()[0] for test in tests]  # Extract the first part of the filename as the vowel
-            print("Audio Vowel\t\t" + "\t\t".join(vowels))
-        else:
-            print("Audio Vowel\t\tA\t\tE\t\tI\t\tO\t\tU")
+        print("Audio Vowel\t" + "\t".join(["Euclidean", "Manhattan", "Chebyshev", "Cosine", "\tMahalanobis"]))
 
-        # Calculate and print averages
-        if comparison_option == "1":
-            avg_distances = {vowel: np.mean([distances[vowel] for _, distances in tests]) for vowel in vowels}
-            avg_distances_str = "\t".join([f"{avg_distances[vowel]:.6f}" for vowel in vowels])
-            print(f"Average Compare\t\t{avg_distances_str}")
-        else:
-            avg_distances = {vowel: np.mean([distances[vowel] for _, distances in tests]) for vowel in ['A', 'E', 'I', 'O', 'U']}
-            avg_distances_str = "\t".join([f"{avg_distances[vowel]:.6f}" for vowel in ['A', 'E', 'I', 'O', 'U']])
-            print(f"Average Compare\t\t{avg_distances_str}")
-        
-            # Sort results by distance
-            sorted_distance = sorted(avg_distances.items(), key=lambda x: x[1])
+        # Calculate and print averages for each distance metric
+        avg_distances = {
+            metric: {vowel: np.mean([distances[metric][vowel] for _, distances in tests]) for vowel in ['A', 'E', 'I', 'O', 'U']}
+            for metric in distances.keys()
+        }
 
-            # Check if the shortest distance is to the correct vowel
+        for vowel in ['A', 'E', 'I', 'O', 'U']:
+            print(
+                f"{vowel}\t\t" +
+                "\t".join([f"{avg_distances[metric][vowel]:.6f}" for metric in distances.keys()])
+            )
+
+        # Analyze shortest distance for each metric
+        for metric, metric_distances in avg_distances.items():
+            sorted_distance = sorted(metric_distances.items(), key=lambda x: x[1])
             closest_vowel = sorted_distance[0][0]
             is_correct = (speaker[0] == closest_vowel)
-            print(f"Shortest distance for Average Template Vowel '{speaker[0]}' is to '{closest_vowel}' - {'Correct' if is_correct else 'Incorrect'}")
-                
-            # Update correct count and total count
-            if is_correct:
-                correct_count += 1
-            total_count += 1
+            print(f"[{metric.capitalize()}] Shortest distance: '{closest_vowel}' - {'Correct' if is_correct else 'Incorrect'}")
 
-    # Calculate accuracy
-    if comparison_option != '1':
-        accuracy = (correct_count / total_count) * 100
-        print()
-        print(f"Akurasi total: {accuracy}%")
+            # Update correct count and total count for the specific metric
+            if is_correct:
+                correct_counts[metric] += 1
+            total_counts[metric] += 1
+
+    # Calculate accuracy for each metric
+    accuracies = {
+        metric: (correct_counts[metric] / total_counts[metric] * 100) if total_counts[metric] > 0 else 0
+        for metric in correct_counts.keys()
+    }
     
-    return results
+    print()
+
+    for metric, accuracy in accuracies.items():
+        print(f"Accuracy for {metric.capitalize()} Metric: {accuracy:.2f}%")
+
+    return results, accuracies
 
 def main_option_1(current_dir):
     print("\n(1) Pilih folder dalam template untuk audio input")
