@@ -232,9 +232,24 @@ def pad_to_longest_mfccs(mfcc_list):
 
     return np.array(padded_mfccs)
 
-# Use this function before computing the mean
+# Align the mfcc first
+def align_mfccs(mfcc_list):
+    max_frames = max(mfcc.shape[0] for mfcc in mfcc_list)
+
+    def interpolate_to_longer(mfcc, target_frames):
+        current_frames = mfcc.shape[0]
+        x_old = np.linspace(0, 1, current_frames)
+        x_new = np.linspace(0, 1, target_frames)
+        interpolated = np.array([np.interp(x_new, x_old, mfcc[:, i]) for i in range(mfcc.shape[1])]).T
+        return interpolated
+
+    # Align all MFCCs to have the same number of frames
+    aligned_mfccs = [interpolate_to_longer(mfcc, max_frames) for mfcc in mfcc_list]
+    return aligned_mfccs
+
+# for calculating the average templates
 def compute_average_templates(template_folders):
-    """Computes average MFCC templates for each vowel."""
+    # Computes average MFCC templates for each vowel
     vowels = ['A', 'I', 'U', 'E', 'O']
     average_templates = {}
 
@@ -250,10 +265,10 @@ def compute_average_templates(template_folders):
                 mfcc_list.append(extract_mfcc(file_path))
 
         if mfcc_list:
-            # Pad only the shorter MFCCs to match the longest
-            padded_mfccs = pad_to_longest_mfccs(mfcc_list)
+            # Align MFCCs to the same frame count
+            aligned_mfccs = align_mfccs(mfcc_list)
             # Compute the mean
-            average_templates[vowel] = np.mean(padded_mfccs, axis=0)
+            average_templates[vowel] = np.mean(aligned_mfccs, axis=0)
 
     return average_templates
 
