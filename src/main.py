@@ -254,35 +254,17 @@ def compute_average_templates(template_folders):
 
     return average_templates
 
-def compare_with_average_templates(average_templates, test_files, comparison_option):
+def compare_with_average_templates(average_templates, test_files):
     results = {}
 
     # Initialize counters for each metric
-    correct_counts = {
-        "euclidean": 0,
-        "manhattan": 0,
-        "chebyshev": 0,
-        "cosine": 0,
-        "mahalanobis": 0,
-    }
-    total_counts = {
-        "euclidean": 0,
-        "manhattan": 0,
-        "chebyshev": 0,
-        "cosine": 0,
-        "mahalanobis": 0,
-    }
+    correct_counts = {"euclidean": 0, "manhattan": 0, "chebyshev": 0, "cosine": 0, "mahalanobis": 0,}
+    total_counts = {"euclidean": 0, "manhattan": 0, "chebyshev": 0, "cosine": 0, "mahalanobis": 0,}
 
     for testfile in test_files:
         test_vowel = os.path.basename(testfile).split(' ')[0]
         test_mfcc = extract_mfcc(testfile)
-        distances = {
-            "euclidean": {},
-            "manhattan": {},
-            "chebyshev": {},
-            "cosine": {},
-            "mahalanobis": {},
-        }
+        distances = {"euclidean": {}, "manhattan": {}, "chebyshev": {}, "cosine": {}, "mahalanobis": {},}
 
         if test_vowel in average_templates:
             for vowel, avg_template_mfcc in average_templates.items():
@@ -464,33 +446,9 @@ def main_average_templates():
     print()
     print()
     
-    # Choose option between same vowel or all vowels
-    print("Pilih opsi pencocokan dengan template rata-rata:")
-    print("1. Pencocokan dengan template rata-rata untuk vokal yang sama")
-    print("2. Pencocokan dengan template rata-rata untuk semua vokal")
-    
-    comparison_option = input("Masukkan pilihan Anda (1/2): ")
-    
-    while comparison_option not in ["1", "2"]:
-        print("Pilihan tidak valid.")
-        comparison_option = input("Masukkan pilihan Anda (1/2): ")
-        
+    print("Perhitungan dengan menggunakan Average Template untuk semua vokal:")
+    compare_with_average_templates(average_templates, directory_sound_compare)
     print()
-    print()
-    print("----------------------------------------------------------------------------------------------------")
-    print()
-    print()
-        
-    if comparison_option == "1":
-        # Compare using same vowel
-        print("(2) Perhitungan dengan menggunakan average template untuk vokal yang sama:")
-        compare_with_average_templates(average_templates, directory_sound_compare, comparison_option)
-        print()
-    else:    
-        # Compare using averaged templates
-        print("(2) Perhitungan dengan menggunakan average template untuk semua vokal:")
-        compare_with_average_templates(average_templates, directory_sound_compare, comparison_option)
-        print()
 
 def main():
     current_dir = os.path.dirname(os.path.abspath(__file__))
