@@ -258,13 +258,31 @@ def compare_with_average_templates(average_templates, test_files):
     results = {}
 
     # Initialize counters for each metric
-    correct_counts = {"euclidean": 0, "manhattan": 0, "chebyshev": 0, "cosine": 0, "mahalanobis": 0,}
-    total_counts = {"euclidean": 0, "manhattan": 0, "chebyshev": 0, "cosine": 0, "mahalanobis": 0,}
+    correct_counts = {
+        "euclidean": 0, 
+        "manhattan": 0, 
+        "chebyshev": 0, 
+        "cosine": 0, 
+        "mahalanobis": 0,
+    }
+    total_counts = {
+        "euclidean": 0, 
+        "manhattan": 0, 
+        "chebyshev": 0, 
+        "cosine": 0, 
+        "mahalanobis": 0,
+    }
 
     for testfile in test_files:
         test_vowel = os.path.basename(testfile).split(' ')[0]
         test_mfcc = extract_mfcc(testfile)
-        distances = {"euclidean": {}, "manhattan": {}, "chebyshev": {}, "cosine": {}, "mahalanobis": {},}
+        distances = {
+            "euclidean": {}, 
+            "manhattan": {}, 
+            "chebyshev": {}, 
+            "cosine": {}, 
+            "mahalanobis": {},
+        }
 
         if test_vowel in average_templates:
             for vowel, avg_template_mfcc in average_templates.items():
